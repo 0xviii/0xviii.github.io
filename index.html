@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>.: XVIII :.</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>.: XVIII :.</title>
+  </head>
+
+
   <style>
     * {
       margin: 0;
@@ -32,10 +35,10 @@
     .banner img {
       max-width: 100%;
       height: auto;
-      animation: slideInLeft 1.5s ease forwards;
+      animation: slide 1.5s ease forwards;
     }
 
-    @keyframes slideInLeft {
+    @keyframes slide {
       0% {
         opacity: 0;
         transform: translateX(-50%);
@@ -46,20 +49,20 @@
       }
     }
 
-    .zine {
+    .papers {
       text-align: center;
       margin-top: 50px;
     }
 
-    .zine h2 {
+    .papers h2 {
       font-size: 16px;
-      animation: zoomIn 1.2s ease;
+      animation: zoom 1.2s ease;
       display: inline-block;
       margin-bottom: 10px;
       position: relative;
     }
 
-    .zine h2::after {
+    .papers h2::after {
       content: "";
       display: block;
       width: 200px;
@@ -68,7 +71,7 @@
       margin: 8px auto 0;
     }
 
-    @keyframes zoomIn {
+    @keyframes zoom {
       0% {
         transform: scale(0.5);
         opacity: 0;
@@ -79,21 +82,21 @@
       }
     }
 
-    .publicacao {
+    .pub {
       background-color: #111;
       margin: 20px auto;
       padding: 20px;
       max-width: 800px;
       border-radius: 8px;
       text-align: left;
-      animation: fadeInUp 1s ease;
+      animation: fadeIn 1s ease;
       text-decoration: none;
       color: #fff;
       display: block;
       transition: transform 0.3s ease;
     }
 
-    @keyframes fadeInUp {
+    @keyframes fadeIn {
       0% {
         opacity: 0;
         transform: translateY(30px);
@@ -104,16 +107,16 @@
       }
     }
 
-    .publicacao:hover {
+    .pub:hover {
       transform: scale(1.03);
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
     }
 
-    .publicacao h3 {
+    .pub h3 {
       margin-bottom: 10px;
     }
 
-    .publicacao p {
+    .pub p {
       line-height: 1.5;
     }
 
@@ -126,10 +129,10 @@
       margin: 0 15px;
       display: inline-block;
       transition: transform 0.3s ease;
-      animation: floatIcon 6s infinite ease-in-out;
+      animation: float 6s infinite ease-in-out;
     }
 
-    @keyframes floatIcon {
+    @keyframes float {
       0%   { transform: translateY(0); }
       50%  { transform: translateY(-10px); }
       100% { transform: translateY(0); }
@@ -144,35 +147,36 @@
       height: 35px;
     }
   </style>
-</head>
-<body>
-  <div class="container">
-    <div class="banner">
-      <img src="banner.png" alt="banner">
+
+
+  <body>
+    <div class="container">
+      <div class="banner">
+        <img src="banner.png" alt="banner">
+      </div>
+
+      <div class="papers">
+        <h2>.:: Papers ::.</h2>
+        <a class="pub" href="https://exemplo.com/pub1" target="_blank" rel="noopener noreferrer">
+          <h3>Process Injection with Ptrace()</h3>
+          <p>
+            Before we begin, I assume that you, the reader, already know what ptrace() is. If you don't
+          </br></br>[...]
+          </p>
+        </a>
+      </div>
     </div>
 
-    <div class="zine">
-      <h2>.:: Papers ::.</h2>
-      <a class="publicacao" href="https://exemplo.com/publicacao1" target="_blank" rel="noopener noreferrer">
-        <h3>Process Injection with Ptrace()</h3>
-        <p>
-          Before we begin, I assume that you, the reader, already know what ptrace() is. If you don't
-          </br></br>[...]
-        </p>
+    <div class="icones">
+      <a href="https://t.me/seu_telegram" target="_blank" rel="noopener noreferrer">
+        <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/telegram.svg">
+      </a>
+      <a href="https://discord.com/invite/seu_convite" target="_blank" rel="noopener noreferrer">
+        <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/discord.svg">
+      </a>
+      <a href="https://github.com/seu_perfil" target="_blank" rel="noopener noreferrer">
+        <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/github.svg">
       </a>
     </div>
-  </div>
-
-  <div class="icones">
-    <a href="https://t.me/seu_telegram" target="_blank" rel="noopener noreferrer">
-      <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/telegram.svg">
-    </a>
-    <a href="https://discord.com/invite/seu_convite" target="_blank" rel="noopener noreferrer">
-      <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/discord.svg">
-    </a>
-    <a href="https://github.com/seu_perfil" target="_blank" rel="noopener noreferrer">
-      <img src="https://github.com/CLorant/readme-social-icons/raw/main/large/light/github.svg">
-    </a>
-  </div>
-</body>
+  </body>
 </html>
