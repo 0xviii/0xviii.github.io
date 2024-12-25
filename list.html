@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Exemplo de Exibição de Código</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #212121;
+            font-family: Arial, sans-serif;
+            color: #f0f0f0;
+        }
+        header, main {
+            padding: 20px;
+        }
+        header {
+            background-color: #424242;
+        }
+        h1 {
+            margin: 0;
+            font-weight: 400;
+        }
+        .code-container {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 0;
+            position: relative;
+        }
+        .line-numbers {
+            counter-reset: line;
+        }
+        .line-numbers code {
+            display: block;
+        }
+        .line-numbers code:before {
+            counter-increment: line;
+            content: counter(line);
+            display: inline-block;
+            width: 2em;
+            margin-right: 1em;
+            text-align: right;
+            color: #aaa;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Exibição do Código PHP</h1>
+    </header>
+    <main>
+        <div class="code-container line-numbers">
+            <pre><code>
+&lt;?php
+
+$dir = __DIR__ . '/papers';
+
+function list($dirBase, $dirRel = '')
+{
+    $result = [];
+    $path = $dirBase . ($dirRel ? DIRECTORY_SEPARATOR.$dirRel : '');
+
+    $itens = scandir($path);
+    foreach ($itens as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $caminhoItem = $path . DIRECTORY_SEPARATOR . $item;
+        $caminhoRelativo = ltrim($dirRel . '/' . $item, '/');
+
+        if (is_dir($caminhoItem)) {
+            $result = array_merge($result, list($dirBase, $dirRelativo));
+        } else {
+            $result[] = $caminhoRelativo;
+        }
+    }
+
+    return $result;
+}
+
+$arquivos = list($dir);
+
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"/&gt;
+    &lt;title&gt;Papers&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        a {
+            color: #0f8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            margin-bottom: 8px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Papers&lt;/h1&gt;
+    &lt;div class="file-list"&gt;
+        &lt;?php foreach ($arquivos as $arquivo): ?&gt;
+            &lt;div class="file-item"&gt;
+                &lt;a href="visualizar.php?file=&lt;?= urlencode($arquivo) ?&gt;"&gt;
+                    &lt;?= htmlspecialchars($arquivo) ?&gt;
+                &lt;/a&gt;
+            &lt;/div&gt;
+        &lt;?php endforeach; ?&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+        </div>
+    </main>
+</body>
+</html>
