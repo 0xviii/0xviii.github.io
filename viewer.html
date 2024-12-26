@@ -81,8 +81,8 @@
       padding: 20px;
       display: none;
       opacity: 0;
-      overflow-y: auto;
-      overflow-x: auto; 
+      overflow-y: auto; 
+      overflow-x: hidden;
       max-height: 60vh;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
       margin: 0 auto;
@@ -139,8 +139,9 @@
 
     pre, code {
       font-size: 14px;
-      white-space: pre;
-      word-wrap: normal;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     #viewerContent img {
