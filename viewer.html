@@ -1,351 +1,315 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>.:: Viewer ::.</title>
-  <style>
-    /* ===== Reset básico ===== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>.:: Viewer ::.</title>
+    </head>
 
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .header-container {
-      text-align: center; 
-      margin: 20px 0;
-    }
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
 
-    /*
-      Usamos um pseudo-elemento para criar a linha.
-      - height: 1px => linha fina
-      - width: 130% => um pouco maior que o texto
-      - transform: translateX(-50%) => centraliza a linha abaixo do texto
-    */
-    h1 {
-      position: relative;    /* para permitir posicionar o ::after */
-      display: inline-block; /* evita a linha ocupar a tela toda */
-      margin-bottom: 20px;   /* espaço abaixo do título */
-      padding-bottom: 5px;   /* espaço entre texto e linha */
-    }
-    h1::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 130%;         /* ajuste conforme desejar (ex: 120%, 150%, etc.) */
-      height: 1px;         /* linha fina (1px) */
-      background: #fff;    /* cor da linha */
-      transform: translateX(-50%); /* centraliza a linha */
-    }
+        .header-container {
+        text-align: center; 
+        margin: 20px 0;
+        }
 
-    button {
-      background: #111;
-      color: #0f8;
-      border: 1px solid #0f8;
-      padding: 8px 12px;
-      cursor: pointer;
-      transition: opacity 0.5s ease;
-      margin-bottom: 20px;
-    }
-    button:hover {
-      background: #0f8;
-      color: #111;
-    }
+        h1 {
+            position: relative;    
+            display: inline-block; 
+            margin-bottom: 20px;   
+            padding-bottom: 5px;   
+        }
 
-    /* ===== Animações ===== */
-    .fade-in {
-      animation: fadeIn 0.5s forwards;
-    }
-    .fade-out {
-      animation: fadeOut 0.5s forwards;
-    }
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 130%;         
+            height: 1px;         
+            background: #fff;    
+            transform: translateX(-50%); 
+        }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(15px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(15px);
-      }
-    }
-
-    /* 
-      Contêiner centralizado para a Árvore e para o Viewer
-      Defina uma largura máxima e margens automáticas para centrar.
-    */
-    .centered-box {
-      max-width: 600px;
-      margin: 0 auto; 
-      background-color: #111;
-      border-radius: 8px;
-      padding: 20px;
-    }
-
-    /* ===== Container da Árvore ===== */
-    #treeContainer {
-      display: none;
-      opacity: 0; 
-      font-family: Consolas, Monaco, monospace;
-      white-space: pre; 
-    }
-    #treeContainer.show {
-      display: block;
-    }
-
-    .file-link {
-      color: #0f8;
-      text-decoration: none;
-    }
-    .file-link:hover {
-      text-decoration: underline;
-    }
-
-    /* ===== Viewer ===== */
-    #viewer {
-      display: none;
-      opacity: 0;
-      font-family: Consolas, Monaco, monospace;
-    }
-    #viewer.show {
-      display: block;
-    }
-
-    /* Cabeçalho do Viewer para exibir título e botão X */
-    .viewer-header {
-      position: relative; 
-      border-bottom: 1px solid #333;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-    }
-
-    /* Título do Viewer */
-    #viewerTitle {
-      font-weight: bold;
-      font-size: 18px;
-      margin: 0;
-    }
-
-    /* Botão de fechar em forma de X no canto superior direito */
-    #closeViewerBtn {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background: none;
-      border: none;
-      color: #ccc;
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
-    }
-    #closeViewerBtn:hover {
-      color: #fff;
-    }
-
-    pre, code {
-      font-size: 14px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    /* Ajuste simples para imagem */
-    #viewerContent img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 10px auto;
-    }
-
-  </style>
-</head>
-<body>
-  <!-- Cabeçalho -->
-  <div class="header-container">
-    <h1>.:: Papers ::.</h1><br />
-    <button id="listarBtn" onclick="exibirEstrutura()">Listar Arquivos</button>
-  </div>
-
-  <!-- Caixa centralizada para a árvore -->
-  <div id="treeContainer" class="centered-box"></div>
-
-  <!-- Caixa centralizada para o viewer -->
-  <div id="viewer" class="centered-box">
-    <div class="viewer-header">
-      <span id="viewerTitle"></span>
-      <button id="closeViewerBtn" onclick="fecharViewer()">×</button>
-    </div>
-    <pre><code id="viewerContent"></code></pre>
-  </div>
-
-  <script>
-    const githubUser  = "0xviii";
-    const repoName    = "0xviii.github.io";
-    const branchName  = "main";
-    const baseFolder  = "papers";  // Pasta raiz (ajuste se quiser outra)
-
-    // Abre (lê) o arquivo no Viewer
-    function abrirArquivo(fileName, fileUrl) {
-      const ext = fileName.split('.').pop().toLowerCase();
-      
-      // Esconder árvore
-      const treeContainer = document.getElementById("treeContainer");
-      treeContainer.classList.remove("show", "fade-in");
-      treeContainer.style.display = "none";
-      
-      // Preparar viewer
-      const viewer         = document.getElementById("viewer");
-      const viewerTitle    = document.getElementById("viewerTitle");
-      const viewerContent  = document.getElementById("viewerContent");
-      
-      // Limpa conteúdo anterior
-      viewerContent.textContent = "";
-      viewerContent.innerHTML   = ""; 
-      
-      viewerTitle.textContent   = "Visualizando: " + fileName;
-
-      // Tratar extensões
-      if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
-        // Imagem - exibir como <img>
-        viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
+        button {
+            background: #111;
+            color: #0f8;
+            border: 1px solid #0f8;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+            margin-bottom: 20px;
+        }
         
-        // Mostra o viewer
-        viewer.classList.add("show", "fade-in");
-        viewer.style.display = "block";
-        viewer.style.opacity = "1";
-      } 
-      else if (ext === 'pdf') {
-        // PDF - abrir em nova aba
-        window.open(fileUrl, '_blank');
-      } 
-      else {
-        // Texto (ou fallback para qualquer outro tipo)
-        fetch(fileUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error("Não foi possível carregar o arquivo: " + response.status);
-            }
-            return response.text();
-          })
-          .then(content => {
-            viewerContent.textContent = content;
+        button:hover {
+            background: #0f8;
+            color: #111;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        }
+        @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        }
+
+        .centered-box {
+            max-width: 600px;
+            margin: 0 auto; 
+            background-color: #111;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        #treeContainer {
+            display: none;
+            opacity: 0; 
+            font-family: Consolas, Monaco, monospace;
+            white-space: pre; 
+        }
+        
+        #treeContainer.show {
+            display: block;
+        }
+
+        .file-link {
+            color: #0f8;
+            text-decoration: none;
+        }
+        
+        .file-link:hover {
+            text-decoration: underline;
+        }
+
+        #viewer {
+            display: none;
+            opacity: 0;
+            font-family: Consolas, Monaco, monospace;
+        }
+
+        #viewer.show {
+            display: block;
+        }
+
+        .viewer-header {
+            position: relative; 
+            border-bottom: 1px solid #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+
+        #viewerTitle {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        #closeViewerBtn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        #closeViewerBtn:hover {
+            color: #fff;
+        }
+
+        pre, code {
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        #viewerContent img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px auto;
+        }
+  </style>
+
+    <body>
+        <div class="header-container">
+            <h1>.:: Papers ::.</h1><br />
+            <button id="listarBtn" onclick="exibirEstrutura()">All files</button>
+        </div>
+
+        <div id="treeContainer" class="centered-box"></div>
+
+        <div id="viewer" class="centered-box">
+            <div class="viewer-header">
+            <span id="viewerTitle"></span>
+            <button id="closeViewerBtn" onclick="fecharViewer()">×</button>
+            </div>
+            <pre><code id="viewerContent"></code></pre>
+        </div>
+
+        <script>
+            const githubUser  = "0xviii";
+            const repoName    = "0xviii.github.io";
+            const branchName  = "main";
+            const baseFolder  = "papers";
+
+            function abrirArquivo(fileName, fileUrl) {
+            const ext = fileName.split('.').pop().toLowerCase();
             
-            viewer.classList.add("show", "fade-in");
-            viewer.style.display = "block";
-            viewer.style.opacity = "1";
-          })
-          .catch(err => {
-            console.error("Erro ao carregar arquivo:", err);
-            alert("Não foi possível carregar o arquivo. Verifique se é um arquivo texto ou se ele existe no repositório.");
-          });
-      }
-    }
+            const treeContainer = document.getElementById("treeContainer");
+            treeContainer.classList.remove("show", "fade-in");
+            treeContainer.style.display = "none";
+            
+            const viewer         = document.getElementById("viewer");
+            const viewerTitle    = document.getElementById("viewerTitle");
+            const viewerContent  = document.getElementById("viewerContent");
+            
+            viewerContent.textContent = "";
+            viewerContent.innerHTML   = ""; 
+            
+            viewerTitle.textContent   = "Visualizando: " + fileName;
 
-    // Fechar o viewer e voltar para a listagem
-    function fecharViewer() {
-      const viewer         = document.getElementById("viewer");
-      const treeContainer  = document.getElementById("treeContainer");
+            if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
+                viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
+                viewer.classList.add("show", "fade-in");
+                viewer.style.display = "block";
+                viewer.style.opacity = "1";
+            } 
+            else if (ext === 'pdf') {
+                window.open(fileUrl, '_blank');
+            } 
+            else {
+                fetch(fileUrl)
+                .then(response => {
+                    if (!response.ok) {
+                    throw new Error("Não foi possível carregar o arquivo: " + response.status);
+                    }
+                    return response.text();
+                })
+                .then(content => {
+                    viewerContent.textContent = content;
+                    viewer.classList.add("show", "fade-in");
+                    viewer.style.display = "block";
+                    viewer.style.opacity = "1";
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar arquivo:", err);
+                    alert("Não foi possível carregar o arquivo. Verifique se é um arquivo texto ou se ele existe no repositório.");
+                });
+            }
+            }
 
-      // Oculta o viewer
-      viewer.classList.remove("show", "fade-in");
-      viewer.style.display = "none";
-      
-      // Exibe de volta a listagem
-      treeContainer.classList.add("show", "fade-in");
-      treeContainer.style.display = "block";
-      treeContainer.style.opacity = "1";
-    }
+            function fecharViewer() {
+            const viewer         = document.getElementById("viewer");
+            const treeContainer  = document.getElementById("treeContainer");
 
-    // Função recursiva que monta a árvore em HTML (com links <a>)
-    async function buildTreeHTML(path, prefix = "", isLast = false) {
-      let html = "";
+            viewer.classList.remove("show", "fade-in");
+            viewer.style.display = "none";
+            
+            treeContainer.classList.add("show", "fade-in");
+            treeContainer.style.display = "block";
+            treeContainer.style.opacity = "1";
+            }
 
-      const connector = isLast ? "└── " : "├── ";
-      const folderName = path.split("/").pop();
+            async function buildTreeHTML(path, prefix = "", isLast = false) {
+            let html = "";
+            const connector = isLast ? "└── " : "├── ";
+            const folderName = path.split("/").pop();
 
-      if (path === baseFolder) {
-        html += folderName + "/\n";
-      } else {
-        html += prefix + connector + folderName + "/\n";
-      }
+            if (path === baseFolder) {
+                html += folderName + "/\n";
+            } else {
+                html += prefix + connector + folderName + "/\n";
+            }
 
-      const newPrefix = prefix + (isLast ? "    " : "│   ");
+            const newPrefix = prefix + (isLast ? "    " : "│   ");
+            const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
+            const response = await fetch(url);
+            const data = await response.json();
 
-      const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
-      const response = await fetch(url);
-      const data = await response.json();
+            if (!Array.isArray(data)) {
+                return html + newPrefix + "└── [Erro ao listar]\n";
+            }
 
-      if (!Array.isArray(data)) {
-        return html + newPrefix + "└── [Erro ao listar]\n";
-      }
+            const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
+            const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
 
-      // Filtra e ordena pastas e arquivos
-      const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
-      const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
+            for (let i = 0; i < folders.length; i++) {
+                const subfolder = folders[i];
+                const isLastFolder = (i === folders.length - 1) && (files.length === 0);
+                html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
+            }
 
-      // Listar subpastas
-      for (let i = 0; i < folders.length; i++) {
-        const subfolder = folders[i];
-        // Se não há arquivos depois do último diretório, este subfolder é "isLastFolder"
-        const isLastFolder = (i === folders.length - 1) && (files.length === 0);
-        html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
-      }
+            files.forEach((file, index) => {
+                const isLastFile = (index === files.length - 1);
+                const fileConnector = isLastFile ? "└── " : "├── ";
+                const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
+                html += `${newPrefix}${fileConnector}${fileLink}\n`;
+            });
 
-      // Listar arquivos
-      files.forEach((file, index) => {
-        const isLastFile = (index === files.length - 1);
-        const fileConnector = isLastFile ? "└── " : "├── ";
-        const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
-        html += `${newPrefix}${fileConnector}${fileLink}\n`;
-      });
+            return html;
+            }
 
-      return html;
-    }
+            function exibirEstrutura() {
+            const button        = document.getElementById("listarBtn");
+            const treeContainer = document.getElementById("treeContainer");
 
-    // Exibe a estrutura ao clicar no botão
-    function exibirEstrutura() {
-      const button        = document.getElementById("listarBtn");
-      const treeContainer = document.getElementById("treeContainer");
+            button.classList.add("fade-out");
+            setTimeout(() => {
+                button.style.display = "none";
+            }, 500);
 
-      // Fade-out do botão
-      button.classList.add("fade-out");
-      setTimeout(() => {
-        button.style.display = "none";
-      }, 500);
-
-      buildTreeHTML(baseFolder)
-        .then(treeStr => {
-          treeContainer.innerHTML = treeStr;
-          treeContainer.classList.add("show", "fade-in");
-          treeContainer.style.opacity = "1";
-          treeContainer.style.display = "block";
-        })
-        .catch(err => {
-          console.error("Erro ao montar a árvore:", err);
-          treeContainer.textContent = "Ocorreu um erro ao montar a estrutura.";
-          treeContainer.classList.add("show", "fade-in");
-          treeContainer.style.opacity = "1";
-          treeContainer.style.display = "block";
-        });
-    }
-  </script>
-</body>
+            buildTreeHTML(baseFolder)
+                .then(treeStr => {
+                treeContainer.innerHTML = treeStr;
+                treeContainer.classList.add("show", "fade-in");
+                treeContainer.style.opacity = "1";
+                treeContainer.style.display = "block";
+                })
+                .catch(err => {
+                console.error("Erro ao montar a árvore:", err);
+                treeContainer.textContent = "Ocorreu um erro ao montar a estrutura.";
+                treeContainer.classList.add("show", "fade-in");
+                treeContainer.style.opacity = "1";
+                treeContainer.style.display = "block";
+                });
+            }
+        </script>
+    </body>
 </html>
