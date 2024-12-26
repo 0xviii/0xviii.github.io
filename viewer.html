@@ -4,12 +4,20 @@
   <meta charset="UTF-8">
   <title>.:: Viewer ::.</title>
   <style>
+    /* ===== Reset básico ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background-color: #000;
       color: #fff;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
+
     a {
       color: #0f8;
       text-decoration: none;
@@ -17,6 +25,8 @@
     a:hover {
       text-decoration: underline;
     }
+
+    /* ===== Botão ===== */
     button {
       background: #111;
       color: #0f8;
@@ -24,23 +34,74 @@
       padding: 8px 12px;
       cursor: pointer;
       margin-bottom: 20px;
+      transition: opacity 0.5s ease;
     }
     button:hover {
       background: #0f8;
       color: #111;
     }
+
+    /* ===== Animações ===== */
+    .fade-in {
+      animation: fadeIn 0.5s forwards;
+    }
+    .fade-out {
+      animation: fadeOut 0.5s forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+    }
+
+    /* ===== Lista de arquivos ===== */
     .file-list {
       margin-top: 20px;
+      opacity: 0;       /* Começa invisível */
+      pointer-events: none;
     }
+
+    /* Quando mostramos a lista, ativamos a animação e liberamos o pointer-events */
+    .file-list.show {
+      pointer-events: auto;
+    }
+
     .file-item {
       margin-bottom: 8px;
     }
+
+    /* ===== Viewer ===== */
     .viewer {
       margin-top: 30px;
       background-color: #111;
       padding: 20px;
       border-radius: 8px;
+      display: none; /* Oculto por padrão */
+      opacity: 0;    /* Para animar o fade-in */
     }
+    .viewer.show {
+      display: block;
+      /* Opção 1: usar fade-in direto na classe
+         Opção 2: colocar a classe fade-in pelo JS. */
+    }
+
     pre, code {
       font-family: Consolas, Monaco, monospace;
       font-size: 14px;
@@ -54,11 +115,11 @@
   <h1>.:: Papers ::.</h1>
   <p>Listando arquivos de <code>papers/malwaredev</code> via GitHub API.</p>
   
-  <button onclick="listarArquivos()">Listar Arquivos</button>
+  <button id="listarBtn" onclick="listarArquivos()">Listar Arquivos</button>
 
   <div class="file-list" id="fileList"></div>
 
-  <div class="viewer" id="viewer" style="display: none;">
+  <div class="viewer" id="viewer">
     <h2 id="viewerTitle"></h2>
     <pre><code id="viewerContent"></code></pre>
   </div>
@@ -72,12 +133,22 @@
     const githubApiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${folderPath}?ref=${branchName}`;
 
     function listarArquivos() {
+      const button = document.getElementById("listarBtn");
+      const fileListEl = document.getElementById("fileList");
+
+      // Fade out do botão
+      button.classList.add("fade-out");
+      // Após 0.5s, removemos o botão da tela
+      setTimeout(() => {
+        button.style.display = "none";
+      }, 500);
+
       fetch(githubApiUrl)
         .then(response => response.json())
         .then(data => {
-          const fileListEl = document.getElementById("fileList");
+          // Limpamos o conteúdo atual
           fileListEl.innerHTML = "";
-
+          
           if (Array.isArray(data)) {
             let foundFile = false;
             data.forEach(item => {
@@ -101,10 +172,15 @@
             fileListEl.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
             console.error("Retorno inesperado da API:", data);
           }
+
+          // Mostra a lista com fade-in
+          fileListEl.classList.add("show", "fade-in");
         })
         .catch(err => {
           console.error("Erro ao obter lista de arquivos:", err);
-          document.getElementById("fileList").innerHTML = "<p>Ocorreu um erro ao listar.</p>";
+          fileListEl.innerHTML = "<p>Ocorreu um erro ao listar.</p>";
+          // Mesmo que haja erro, animamos o aparecimento da div pra ficar visualmente consistente
+          fileListEl.classList.add("show", "fade-in");
         });
     }
 
@@ -112,9 +188,13 @@
       fetch(fileUrl)
         .then(response => response.text())
         .then(content => {
+          const viewer = document.getElementById("viewer");
           document.getElementById("viewerTitle").textContent = "Visualizando: " + fileName;
           document.getElementById("viewerContent").textContent = content;
-          document.getElementById("viewer").style.display = "block";
+
+          // Mostra o Viewer com fade-in
+          viewer.classList.add("show", "fade-in");
+          viewer.style.opacity = "1";
         })
         .catch(err => {
           console.error("Erro ao carregar arquivo:", err);
