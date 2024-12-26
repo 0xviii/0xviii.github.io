@@ -12,7 +12,6 @@ function listarArquivos($baseDir, $rel = '')
             continue;
         }
 
-        // Usar outra variável para não sobrescrever $path
         $fullPath = $path . DIRECTORY_SEPARATOR . $item;
         $relativePath = ltrim($rel . '/' . $item, '/');
 
