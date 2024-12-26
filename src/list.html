@@ -1,69 +1,71 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Papers</title>
-    <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        a {
-            color: #0f8;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .file-list {
-            margin-top: 20px;
-        }
-        .file-item {
-            margin-bottom: 8px;
-        }
-    </style>
-</head>
-<body>
-<?php
+    <head>
+        <meta charset="UTF-8">
+        <title>Papers</title>
+        <style>
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: Arial, sans-serif;
+                padding: 20px;
+            }
+            a {
+                color: #0f8;
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            .file-list {
+                margin-top: 20px;
+            }
+            .file-item {
+                margin-bottom: 8px;
+            }
+        </style>
+    </head>
 
-$dir = __DIR__ . '/papers';
+    <body>
+        <?php
 
-function listarArquivos($dirBase, $dirRel = '')
-{
-    $result = [];
-    $path = $dirBase . ($dirRel ? DIRECTORY_SEPARATOR.$dirRel : '');
+        $dir = __DIR__ . '../papers';
 
-    $itens = scandir($path);
-    foreach ($itens as $item) {
-        if ($item === '.' || $item === '..') {
-            continue;
+        function list($dir, $rel = '')
+        {
+            $result = [];
+            $path = $dir . ($rel ? DIRECTORY_SEPARATOR.$rel : '');
+
+            $itens = scandir($path);
+            foreach ($itens as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $path = $path . DIRECTORY_SEPARATOR . $item;
+                $relativepath = ltrim($rel . '/' . $item, '/');
+                if (is_dir($path)) {
+                    $result = array_merge($result, list($dir, $relativepath));
+                } else {
+                    $result[] = $relativepath;
+                }
+            }
+
+            return $result;
         }
-        $caminhoItem = $path . DIRECTORY_SEPARATOR . $item;
-        $caminhoRelativo = ltrim($dirRel . '/' . $item, '/');
-        if (is_dir($caminhoItem)) {
-            $result = array_merge($result, listarArquivos($dirBase, $caminhoRelativo));
-        } else {
-            $result[] = $caminhoRelativo;
-        }
-    }
 
-    return $result;
-}
+        $files = list($dir);
 
-$arquivos = listarArquivos($dir);
-
-?>
-<h1>Papers</h1>
-<div class="file-list">
-    <?php foreach ($arquivos as $arquivo): ?>
-        <div class="file-item">
-            <a href="visualizar.php?file=<?= urlencode($arquivo) ?>">
-                <?= htmlspecialchars($arquivo) ?>
-            </a>
-        </div>
-    <?php endforeach; ?>
-</div>
-</body>
+        ?>
+    
+    <h1>Papers</h1>
+    <div class="file-list">
+        <?php foreach ($files as $file): ?>
+            <div class="file-item">
+                <a href="viewer.php?file=<?= urlencode($file) ?>">
+                    <?= htmlspecialchars($file) ?>
+                </a>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    </body>
 </html>
