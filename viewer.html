@@ -18,12 +18,13 @@
       padding: 20px;
     }
 
-    /* ===== Título centralizado com linha embaixo ===== */
+    /* ===== Título centralizado com linha curta abaixo ===== */
     h1 {
+      display: inline-block; /* Para que a linha tenha um tamanho similar ao texto */
+      margin: 20px auto;
       text-align: center;
-      margin: 20px 0;
+      border-bottom: 2px solid #fff; /* Linha abaixo */
       padding-bottom: 5px;
-      border-bottom: 2px solid #fff; /* Linha sob o título */
     }
 
     /* ===== Botão ===== */
@@ -79,13 +80,14 @@
       border-radius: 8px;
       margin-top: 20px;
       font-family: Consolas, Monaco, monospace;
-      white-space: pre; /* Mantém quebra de linha e espaços */
+      /* Se quiser quebras de linha iguais ao ASCII, use white-space: pre */
+      white-space: pre;
     }
     #treeContainer.show {
       display: block;
     }
     
-    /* Para destacar links dentro da árvore */
+    /* Links dentro da árvore */
     .file-link {
       color: #0f8;
       text-decoration: none;
@@ -132,21 +134,24 @@
     const githubUser  = "0xviii";
     const repoName    = "0xviii.github.io";
     const branchName  = "main";
+    const baseFolder  = "papers";  // Pasta raiz (ajuste se quiser outra)
 
-    // A pasta principal que queremos mostrar (ex.: "papers")
-    const baseFolder  = "papers";
-
-    // Função para abrir arquivo no viewer
+    /**
+     * Abre (lê) o arquivo no Viewer
+     */
     function abrirArquivo(fileName, fileUrl) {
       fetch(fileUrl)
-        .then(response => response.text())
+        .then(response => {
+          // Se não for OK, pode gerar erro
+          if (!response.ok) {
+            throw new Error("Não foi possível carregar o arquivo: " + response.status);
+          }
+          return response.text();
+        })
         .then(content => {
           const viewer = document.getElementById("viewer");
-          const title  = document.getElementById("viewerTitle");
-          const code   = document.getElementById("viewerContent");
-
-          title.textContent = "Visualizando: " + fileName;
-          code.textContent  = content;
+          document.getElementById("viewerTitle").textContent = "Visualizando: " + fileName;
+          document.getElementById("viewerContent").textContent = content;
 
           // Fade-in do viewer
           viewer.classList.add("show", "fade-in");
@@ -154,51 +159,47 @@
         })
         .catch(err => {
           console.error("Erro ao carregar arquivo:", err);
-          alert("Não foi possível carregar o arquivo.");
+          alert("Não foi possível carregar o arquivo. Verifique se é um arquivo texto ou se ele existe no repositório.");
         });
     }
 
     /**
-     * Função recursiva que monta a string HTML
-     * com estrutura de árvore. Para cada diretório,
-     * chamamos a API do GitHub e listamos
-     * subdiretórios/arquivos.
+     * Função recursiva que monta a árvore em HTML (com links <a>).
+     * Retorna uma string contendo tags <a> para arquivos.
      */
     async function buildTreeHTML(path, prefix = "", isLast = false) {
       let html = "";
 
-      // Determina qual símbolo usar para este item
       const connector = isLast ? "└── " : "├── ";
-
-      // Extrai somente o nome (ex.: "papers/malwaredev" -> "malwaredev")
       const folderName = path.split("/").pop();
 
-      // Se for a pasta raiz, não exibe conector; caso contrário, exibe
-      html += path === baseFolder 
-        ? `${folderName}/\n`
-        : `${prefix}${connector}${folderName}/\n`;
+      // Se for a pasta base, não exibimos o conector, senão exibimos
+      if (path === baseFolder) {
+        html += folderName + "/\n";
+      } else {
+        html += prefix + connector + folderName + "/\n";
+      }
 
-      // Prefixo atualizado para os itens dentro desta pasta
+      // Ajusta prefix para subitens
       const newPrefix = prefix + (isLast ? "    " : "│   ");
 
-      // Consulta a API
+      // Chama a API
       const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
       const response = await fetch(url);
       const data = await response.json();
 
       if (!Array.isArray(data)) {
-        // Se não retornou array, exibimos erro
         return html + newPrefix + "└── [Erro ao listar]\n";
       }
 
-      // Separar pastas e arquivos
-      const folders = data.filter(item => item.type === "dir").sort((a,b)=> a.name.localeCompare(b.name));
-      const files   = data.filter(item => item.type === "file").sort((a,b)=> a.name.localeCompare(b.name));
+      // Separa pastas e arquivos
+      const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
+      const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
 
       // Monta árvore para subdiretórios
       for (let i = 0; i < folders.length; i++) {
-        const isLastFolder = (i === folders.length - 1) && files.length === 0;
         const subfolder = folders[i];
+        const isLastFolder = (i === folders.length - 1) && (files.length === 0);
         html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
       }
 
@@ -206,19 +207,19 @@
       files.forEach((file, index) => {
         const isLastFile = (index === files.length - 1);
         const fileConnector = isLastFile ? "└── " : "├── ";
-
-        // Para acessar o arquivo, chamamos "abrirArquivo(...)"
+        // Link para abrir o arquivo
         const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
-
         html += `${newPrefix}${fileConnector}${fileLink}\n`;
       });
 
       return html;
     }
 
-    // Quando clicar no botão "Listar Arquivos"
+    /**
+     * Exibe a estrutura ao clicar no botão
+     */
     function exibirEstrutura() {
-      const button       = document.getElementById("listarBtn");
+      const button        = document.getElementById("listarBtn");
       const treeContainer = document.getElementById("treeContainer");
 
       // Fade-out do botão
@@ -227,15 +228,14 @@
         button.style.display = "none";
       }, 500);
 
-      // Monta a árvore a partir de baseFolder
       buildTreeHTML(baseFolder)
         .then(treeStr => {
-          // Ajuste estético: adicionamos "├── " na raiz
-          // se desejar, ou podemos deixar sem.
-          // Para ficar coerente, vamos prefixar com "├── "
-          const finalText = `├── ${treeStr.trim()}\n`;
+          // Se quiser prefixar "├── " na raiz, pode fazer aqui:
+          // Ex: treeStr = "├── " + treeStr.trimStart();
           
-          treeContainer.textContent = finalText;
+          // IMPORTANTE: usar innerHTML para que <a> seja link de fato
+          treeContainer.innerHTML = treeStr;
+
           // Fade-in do container
           treeContainer.classList.add("show", "fade-in");
           treeContainer.style.opacity = "1";
