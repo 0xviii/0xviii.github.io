@@ -1,29 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <!-- Para melhor visualização em dispositivos móveis -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>.:: Viewer ::.</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.:: Viewer ::.</title>
+  </head>
+
   <style>
-    /* RESET BÁSICO */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    /* Ocupa toda a janela e remove barra de rolagem inicial */
     html, body {
       width: 100%;
       height: 100%;
-      overflow: hidden; /* se quiser permitir scroll ao listar muitos arquivos, remova esta linha */
+      overflow: hidden;
       background-color: #000;
       color: #fff;
       font-family: Arial, sans-serif;
     }
 
-    /* Cabeçalho fixo no topo */
     .header {
       position: fixed;
       top: 0;
@@ -41,15 +39,14 @@
       content: "";
       display: block;
       margin: 5px auto 0 auto;
-      width: 200px;         /* Tamanho maior da linha */
+      width: 200px;
       height: 1px;
       background: #fff;
     }
 
-    /* Container principal - ocupa espaço abaixo do cabeçalho e centraliza conteúdo */
     .main-container {
       position: absolute;
-      top: 80px;  /* altura aproximada do header */
+      top: 80px;
       bottom: 0;
       left: 0;
       right: 0;
@@ -60,15 +57,14 @@
       padding: 20px;
     }
 
-    /* Botão branco com fundo quase transparente e bordas quadradas */
     #bigGreenBtn {
-      background: rgba(255, 255, 255, 0.1); /* fundo translúcido */
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border: 1px solid #fff;
       padding: 15px 30px;
       font-size: 1em;
       cursor: pointer;
-      border-radius: 0; /* bordas quadradas */
+      border-radius: 0;
       transition: background 0.3s, color 0.3s, transform 0.2s;
       margin-bottom: 20px;
     }
@@ -77,7 +73,6 @@
       transform: scale(1.03);
     }
 
-    /* Caixas de conteúdo (lista e viewer) */
     .centered-box {
       max-width: 600px;
       width: 100%;
@@ -86,12 +81,11 @@
       padding: 20px;
       display: none;
       opacity: 0;
-      overflow-y: auto; /* se quiser que o conteúdo interno role */
-      max-height: 60vh; /* limita a altura, evitando extrapolar a tela */
+      overflow-y: auto;
+      max-height: 60vh;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
-    /* Árvore de arquivos */
     #treeContainer {
       font-family: Consolas, Monaco, monospace;
       white-space: pre;
@@ -100,7 +94,6 @@
       display: block;
     }
 
-    /* Links dos arquivos na árvore */
     .file-link {
       color: #0f8;
       text-decoration: none;
@@ -109,7 +102,6 @@
       text-decoration: underline;
     }
 
-    /* Visualizador de arquivo */
     #viewer {
       font-family: Consolas, Monaco, monospace;
     }
@@ -155,7 +147,6 @@
       margin: 10px auto;
     }
 
-    /* Animações de fade-in e fade-out */
     .fade-in {
       animation: fadeIn 0.5s forwards;
     }
@@ -183,7 +174,6 @@
       }
     }
 
-    /* Responsividade */
     @media screen and (max-width: 600px) {
       .header h1 {
         font-size: 1.2em;
@@ -198,168 +188,139 @@
       }
     }
   </style>
-</head>
-<body>
 
-  <!-- Cabeçalho fixo no topo -->
-  <div class="header">
-    <h1>.:: Papers ::.</h1>
-  </div>
-
-  <!-- Conteúdo principal centralizado (botão e caixas) -->
-  <div class="main-container">
-    <!-- Botão para exibir a estrutura de arquivos -->
-    <button id="bigGreenBtn" onclick="displayStructure()">Ver Todos os Arquivos</button>
-    
-    <!-- Área que exibe a estrutura de pastas -->
-    <div id="treeContainer" class="centered-box"></div>
-  
-    <!-- Área que exibe o conteúdo de um arquivo selecionado -->
-    <div id="viewer" class="centered-box">
-      <div class="viewer-header">
-        <span id="viewerTitle"></span>
-        <button id="closeViewerBtn" onclick="closeV()">×</button>
-      </div>
-      <pre><code id="viewerContent"></code></pre>
+  <body>
+    <div class="header">
+        <h1>.:: Papers ::.</h1>
     </div>
-  </div>
+    <div class="main-container">
+        <button id="bigGreenBtn" onclick="displayStructure()">Ver Todos os Arquivos</button>
+        <div id="treeContainer" class="centered-box"></div>
+        <div id="viewer" class="centered-box">
+        <div class="viewer-header">
+            <span id="viewerTitle"></span>
+            <button id="closeViewerBtn" onclick="closeV()">×</button>
+        </div>
+        <pre><code id="viewerContent"></code></pre>
+        </div>
+    </div>
+    <script>
+        const githubUser  = "0xviii";
+        const repoName    = "0xviii.github.io";
+        const branchName  = "main";
+        const baseFolder  = "papers";
 
-  <script>
-    // Configurações para acesso ao GitHub
-    const githubUser  = "0xviii";
-    const repoName    = "0xviii.github.io";
-    const branchName  = "main";
-    const baseFolder  = "papers";
+        function openfile(fileName, fileUrl) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const treeContainer = document.getElementById("treeContainer");
+        treeContainer.classList.remove("show", "fade-in");
+        treeContainer.style.display = "none";
+        const viewer = document.getElementById("viewer");
+        const viewerTitle = document.getElementById("viewerTitle");
+        const viewerContent = document.getElementById("viewerContent");
+        viewerContent.textContent = "";
+        viewerContent.innerHTML = ""; 
+        viewerTitle.textContent = fileName;
 
-    // Abre e visualiza um arquivo
-    function openfile(fileName, fileUrl) {
-      const ext = fileName.split('.').pop().toLowerCase();
-      
-      const treeContainer = document.getElementById("treeContainer");
-      treeContainer.classList.remove("show", "fade-in");
-      treeContainer.style.display = "none";
-      
-      const viewer        = document.getElementById("viewer");
-      const viewerTitle   = document.getElementById("viewerTitle");
-      const viewerContent = document.getElementById("viewerContent");
-      
-      viewerContent.textContent = "";
-      viewerContent.innerHTML   = ""; 
-      
-      viewerTitle.textContent   = fileName;
-
-      if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
-        // Exibir imagem
-        viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
-        viewer.classList.add("show", "fade-in");
-        viewer.style.display = "block";
-        viewer.style.opacity = "1";
-      } else if (ext === 'pdf') {
-        // PDFs em nova aba
-        window.open(fileUrl, '_blank');
-      } else {
-        // Arquivo de texto
-        fetch(fileUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error("Could not load file: " + response.status);
-            }
-            return response.text();
-          })
-          .then(content => {
-            viewerContent.textContent = content;
+        if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
+            viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
             viewer.classList.add("show", "fade-in");
             viewer.style.display = "block";
             viewer.style.opacity = "1";
-          })
-          .catch(err => {
-            console.error("Error loading file:", err);
-            alert("Não foi possível carregar o arquivo. Verifique se ele existe no repositório.");
-          });
-      }
-    }
+        } else if (ext === 'pdf') {
+            window.open(fileUrl, '_blank');
+        } else {
+            fetch(fileUrl)
+            .then(response => {
+                if (!response.ok) {
+                throw new Error("Could not load file: " + response.status);
+                }
+                return response.text();
+            })
+            .then(content => {
+                viewerContent.textContent = content;
+                viewer.classList.add("show", "fade-in");
+                viewer.style.display = "block";
+                viewer.style.opacity = "1";
+            })
+            .catch(err => {
+                console.error("Error loading file:", err);
+                alert("Não foi possível carregar o arquivo. Verifique se ele existe no repositório.");
+            });
+        }
+        }
 
-    // Fecha o visualizador e volta para a lista
-    function closeV() {
-      const viewer        = document.getElementById("viewer");
-      const treeContainer = document.getElementById("treeContainer");
+        function closeV() {
+        const viewer = document.getElementById("viewer");
+        const treeContainer = document.getElementById("treeContainer");
+        viewer.classList.remove("show", "fade-in");
+        viewer.style.display = "none";
+        treeContainer.classList.add("show", "fade-in");
+        treeContainer.style.display = "block";
+        treeContainer.style.opacity = "1";
+        }
 
-      viewer.classList.remove("show", "fade-in");
-      viewer.style.display = "none";
-      
-      treeContainer.classList.add("show", "fade-in");
-      treeContainer.style.display = "block";
-      treeContainer.style.opacity = "1";
-    }
+        async function buildTreeHTML(path, prefix = "", isLast = false) {
+        let html = "";
+        const connector = isLast ? "└── " : "├── ";
+        const folderName = path.split("/").pop();
 
-    // Monta recursivamente a árvore de diretórios e arquivos
-    async function buildTreeHTML(path, prefix = "", isLast = false) {
-      let html = "";
-      const connector = isLast ? "└── " : "├── ";
-      const folderName = path.split("/").pop();
+        if (path === baseFolder) {
+            html += folderName + "/\n";
+        } else {
+            html += prefix + connector + folderName + "/\n";
+        }
 
-      if (path === baseFolder) {
-        html += folderName + "/\n";
-      } else {
-        html += prefix + connector + folderName + "/\n";
-      }
+        const newPrefix = prefix + (isLast ? "    " : "│   ");
+        const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
+        const response = await fetch(url);
+        const data = await response.json();
 
-      const newPrefix = prefix + (isLast ? "    " : "│   ");
-      const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
-      const response = await fetch(url);
-      const data = await response.json();
+        if (!Array.isArray(data)) {
+            return html + newPrefix + "└── [Internal error]\n";
+        }
 
-      if (!Array.isArray(data)) {
-        return html + newPrefix + "└── [Internal error]\n";
-      }
+        const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
+        const files = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
 
-      const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
-      const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
+        for (let i = 0; i < folders.length; i++) {
+            const subfolder = folders[i];
+            const isLastFolder = (i === folders.length - 1) && (files.length === 0);
+            html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
+        }
 
-      for (let i = 0; i < folders.length; i++) {
-        const subfolder = folders[i];
-        const isLastFolder = (i === folders.length - 1) && (files.length === 0);
-        html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
-      }
-
-      files.forEach((file, index) => {
-        const isLastFile = (index === files.length - 1);
-        const fileConnector = isLastFile ? "└── " : "├── ";
-        const fileLink = `<a href="#" class="file-link" onclick="openfile('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
-        html += `${newPrefix}${fileConnector}${fileLink}\n`;
-      });
-
-      return html;
-    }
-
-    // Exibe a estrutura de pastas/arquivos
-    function displayStructure() {
-      const button        = document.getElementById("bigGreenBtn");
-      const treeContainer = document.getElementById("treeContainer");
-
-      // Animação de sumir do botão
-      button.classList.add("fade-out");
-      setTimeout(() => {
-        button.style.display = "none";
-      }, 500);
-
-      // Constrói a árvore e exibe
-      buildTreeHTML(baseFolder)
-        .then(treeStr => {
-          treeContainer.innerHTML = treeStr;
-          treeContainer.classList.add("show", "fade-in");
-          treeContainer.style.opacity = "1";
-          treeContainer.style.display = "block";
-        })
-        .catch(err => {
-          console.error("Error building papers tree:", err);
-          treeContainer.textContent = "Internal error";
-          treeContainer.classList.add("show", "fade-in");
-          treeContainer.style.opacity = "1";
-          treeContainer.style.display = "block";
+        files.forEach((file, index) => {
+            const isLastFile = (index === files.length - 1);
+            const fileConnector = isLastFile ? "└── " : "├── ";
+            const fileLink = `<a href="#" class="file-link" onclick="openfile('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
+            html += `${newPrefix}${fileConnector}${fileLink}\n`;
         });
-    }
-  </script>
 
-</body>
+        return html;
+        }
+
+        function displayStructure() {
+        const button = document.getElementById("bigGreenBtn");
+        const treeContainer = document.getElementById("treeContainer");
+        button.classList.add("fade-out");
+        setTimeout(() => {
+            button.style.display = "none";
+        }, 500);
+        buildTreeHTML(baseFolder)
+            .then(treeStr => {
+            treeContainer.innerHTML = treeStr;
+            treeContainer.classList.add("show", "fade-in");
+            treeContainer.style.opacity = "1";
+            treeContainer.style.display = "block";
+            })
+            .catch(err => {
+            console.error("Error building papers tree:", err);
+            treeContainer.textContent = "Internal error";
+            treeContainer.classList.add("show", "fade-in");
+            treeContainer.style.opacity = "1";
+            treeContainer.style.display = "block";
+            });
+        }
+    </script>
+  </body>
 </html>
