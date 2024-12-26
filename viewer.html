@@ -23,15 +23,27 @@
       margin: 20px 0;
     }
 
-    /* 
-      Aumentamos a espessura do border-bottom e ajustamos o padding-bottom
-      para dar mais "amplitude".
+    /*
+      Usamos um pseudo-elemento para criar a linha.
+      - height: 1px => linha fina
+      - width: 130% => um pouco maior que o texto
+      - transform: translateX(-50%) => centraliza a linha abaixo do texto
     */
     h1 {
-      display: inline-block; 
-      border-bottom: 4px solid #fff; /* antes era 2px, agora 4px para ficar mais "forte" */
-      padding-bottom: 10px;         /* antes era 5px */
-      margin-bottom: 25px;          /* pode ajustar se quiser mais espaço */
+      position: relative;    /* para permitir posicionar o ::after */
+      display: inline-block; /* evita a linha ocupar a tela toda */
+      margin-bottom: 20px;   /* espaço abaixo do título */
+      padding-bottom: 5px;   /* espaço entre texto e linha */
+    }
+    h1::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 130%;         /* ajuste conforme desejar (ex: 120%, 150%, etc.) */
+      height: 1px;         /* linha fina (1px) */
+      background: #fff;    /* cor da linha */
+      transform: translateX(-50%); /* centraliza a linha */
     }
 
     button {
