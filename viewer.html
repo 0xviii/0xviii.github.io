@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>.:: Viewer ::.</title>
   <style>
     body {
@@ -52,8 +52,8 @@
 
 <body>
   <h1>.:: Papers ::.</h1>
-  <p>Exemplo de listagem e visualização (via GitHub API) da pasta <code>papers</code>.</p>
-
+  <p>Listando arquivos de <code>papers/malwaredev</code> via GitHub API.</p>
+  
   <button onclick="listarArquivos()">Listar Arquivos</button>
 
   <div class="file-list" id="fileList"></div>
@@ -64,29 +64,25 @@
   </div>
 
   <script>
-    // AJUSTE ESTES VALORES PARA O SEU REPOSITÓRIO
-    const githubUser   = "0xviii";             // Seu usuário ou organização
-    const repoName     = "0xviii.github.io";   // Nome do seu repositório
-    const branchName   = "main";               // Branch principal (p. ex., "main" ou "master")
-    const folderPath   = "papers";             // Pasta que deseja listar no root (papers/)
+    const githubUser  = "0xviii";
+    const repoName    = "0xviii.github.io";
+    const branchName  = "main";
+    const folderPath  = "papers/malwaredev";
 
-    // URL da API para listar a pasta "papers"
-    // ex: https://api.github.com/repos/0xviii/0xviii.github.io/contents/papers?ref=main
     const githubApiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${folderPath}?ref=${branchName}`;
 
-    // Lista arquivos na pasta 'papers'
     function listarArquivos() {
       fetch(githubApiUrl)
         .then(response => response.json())
         .then(data => {
-          const fileListDiv = document.getElementById("fileList");
-          fileListDiv.innerHTML = "";
+          const fileListEl = document.getElementById("fileList");
+          fileListEl.innerHTML = "";
 
           if (Array.isArray(data)) {
-            // Percorre todos os itens retornados
+            let foundFile = false;
             data.forEach(item => {
-              // Exibir somente arquivos (type === 'file')
               if (item.type === "file") {
+                foundFile = true;
                 const div = document.createElement("div");
                 div.className = "file-item";
                 div.innerHTML = `
@@ -94,31 +90,34 @@
                     ${item.name}
                   </a>
                 `;
-                fileListDiv.appendChild(div);
+                fileListEl.appendChild(div);
               }
             });
+
+            if (!foundFile) {
+              fileListEl.innerHTML = "<p>Nenhum arquivo encontrado neste diretório.</p>";
+            }
           } else {
-            fileListDiv.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
-            console.error("Resposta inesperada da API:", data);
+            fileListEl.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
+            console.error("Retorno inesperado da API:", data);
           }
         })
-        .catch(error => {
-          console.error("Erro ao obter a lista de arquivos:", error);
-          document.getElementById("fileList").innerHTML = "<p>Erro ao listar arquivos.</p>";
+        .catch(err => {
+          console.error("Erro ao obter lista de arquivos:", err);
+          document.getElementById("fileList").innerHTML = "<p>Ocorreu um erro ao listar.</p>";
         });
     }
 
-    // Abre o conteúdo de um arquivo (plaintext) e exibe no viewer
     function abrirArquivo(fileName, fileUrl) {
       fetch(fileUrl)
         .then(response => response.text())
         .then(content => {
-          document.getElementById("viewerTitle").textContent   = "Visualizando: " + fileName;
+          document.getElementById("viewerTitle").textContent = "Visualizando: " + fileName;
           document.getElementById("viewerContent").textContent = content;
-          document.getElementById("viewer").style.display      = "block";
+          document.getElementById("viewer").style.display = "block";
         })
-        .catch(error => {
-          console.error("Erro ao carregar o arquivo:", error);
+        .catch(err => {
+          console.error("Erro ao carregar arquivo:", err);
           alert("Não foi possível carregar o arquivo.");
         });
     }
