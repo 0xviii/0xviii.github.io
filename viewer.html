@@ -18,13 +18,21 @@
       padding: 20px;
     }
 
-    /* ===== Título centralizado com linha curta abaixo ===== */
+    /* 
+      Contêiner para centralizar tudo do topo 
+      e manter título + botão empilhados verticalmente.
+    */
+    .header-container {
+      text-align: center; 
+      margin: 20px 0;     /* espaço vertical */
+    }
+
+    /* Título com linha logo abaixo (mais curta que a tela) */
     h1 {
-      display: inline-block; /* Para que a linha tenha um tamanho similar ao texto */
-      margin: 20px auto;
-      text-align: center;
-      border-bottom: 2px solid #fff; /* Linha abaixo */
+      display: inline-block; /* para a linha ficar apenas no tamanho do texto */
+      border-bottom: 2px solid #fff;
       padding-bottom: 5px;
+      margin-bottom: 20px; /* espaço após o título */
     }
 
     /* ===== Botão ===== */
@@ -34,8 +42,9 @@
       border: 1px solid #0f8;
       padding: 8px 12px;
       cursor: pointer;
-      margin-bottom: 20px;
       transition: opacity 0.5s ease;
+      margin-bottom: 20px;
+      display: inline-block; /* Mantém a largura do conteúdo */
     }
     button:hover {
       background: #0f8;
@@ -80,8 +89,7 @@
       border-radius: 8px;
       margin-top: 20px;
       font-family: Consolas, Monaco, monospace;
-      /* Se quiser quebras de linha iguais ao ASCII, use white-space: pre */
-      white-space: pre;
+      white-space: pre; /* Mantém quebra de linha e espaços (ASCII) */
     }
     #treeContainer.show {
       display: block;
@@ -117,9 +125,11 @@
   </style>
 </head>
 <body>
-  <h1>.:: Papers ::.</h1>
-
-  <button id="listarBtn" onclick="exibirEstrutura()">Listar Arquivos</button>
+  <!-- Contêiner para centralizar título e botão -->
+  <div class="header-container">
+    <h1>.:: Papers ::.</h1><br />
+    <button id="listarBtn" onclick="exibirEstrutura()">Listar Arquivos</button>
+  </div>
 
   <!-- Container onde será exibida a árvore -->
   <div id="treeContainer"></div>
@@ -136,13 +146,10 @@
     const branchName  = "main";
     const baseFolder  = "papers";  // Pasta raiz (ajuste se quiser outra)
 
-    /**
-     * Abre (lê) o arquivo no Viewer
-     */
+    // Abre (lê) o arquivo no Viewer
     function abrirArquivo(fileName, fileUrl) {
       fetch(fileUrl)
         .then(response => {
-          // Se não for OK, pode gerar erro
           if (!response.ok) {
             throw new Error("Não foi possível carregar o arquivo: " + response.status);
           }
@@ -163,27 +170,21 @@
         });
     }
 
-    /**
-     * Função recursiva que monta a árvore em HTML (com links <a>).
-     * Retorna uma string contendo tags <a> para arquivos.
-     */
+    // Função recursiva que monta a árvore em HTML (com links <a>)
     async function buildTreeHTML(path, prefix = "", isLast = false) {
       let html = "";
 
       const connector = isLast ? "└── " : "├── ";
       const folderName = path.split("/").pop();
 
-      // Se for a pasta base, não exibimos o conector, senão exibimos
       if (path === baseFolder) {
         html += folderName + "/\n";
       } else {
         html += prefix + connector + folderName + "/\n";
       }
 
-      // Ajusta prefix para subitens
       const newPrefix = prefix + (isLast ? "    " : "│   ");
 
-      // Chama a API
       const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -192,22 +193,19 @@
         return html + newPrefix + "└── [Erro ao listar]\n";
       }
 
-      // Separa pastas e arquivos
       const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
       const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
 
-      // Monta árvore para subdiretórios
       for (let i = 0; i < folders.length; i++) {
         const subfolder = folders[i];
+        // Se não há arquivos depois do último diretório, este subfolder é "isLastFolder"
         const isLastFolder = (i === folders.length - 1) && (files.length === 0);
         html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
       }
 
-      // Monta árvore para arquivos
       files.forEach((file, index) => {
         const isLastFile = (index === files.length - 1);
         const fileConnector = isLastFile ? "└── " : "├── ";
-        // Link para abrir o arquivo
         const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
         html += `${newPrefix}${fileConnector}${fileLink}\n`;
       });
@@ -215,9 +213,7 @@
       return html;
     }
 
-    /**
-     * Exibe a estrutura ao clicar no botão
-     */
+    // Exibe a estrutura ao clicar no botão
     function exibirEstrutura() {
       const button        = document.getElementById("listarBtn");
       const treeContainer = document.getElementById("treeContainer");
@@ -230,12 +226,7 @@
 
       buildTreeHTML(baseFolder)
         .then(treeStr => {
-          // Se quiser prefixar "├── " na raiz, pode fazer aqui:
-          // Ex: treeStr = "├── " + treeStr.trimStart();
-          
-          // IMPORTANTE: usar innerHTML para que <a> seja link de fato
-          treeContainer.innerHTML = treeStr;
-
+          treeContainer.innerHTML = treeStr; // Links <a> ativos
           // Fade-in do container
           treeContainer.classList.add("show", "fade-in");
           treeContainer.style.opacity = "1";
