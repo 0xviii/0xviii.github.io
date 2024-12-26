@@ -18,12 +18,27 @@
       padding: 20px;
     }
 
-    a {
-      color: #0f8;
-      text-decoration: none;
+    /* ===== Título centralizado com linha no meio ===== */
+    h1 {
+      text-align: center;
+      color: #fff;
+      position: relative;
+      margin: 40px 0;
     }
-    a:hover {
-      text-decoration: underline;
+    h1::before,
+    h1::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #fff;
+    }
+    h1::before {
+      left: 0;
+    }
+    h1::after {
+      right: 0;
     }
 
     /* ===== Botão ===== */
@@ -59,7 +74,6 @@
         transform: translateY(0);
       }
     }
-
     @keyframes fadeOut {
       from {
         opacity: 1;
@@ -71,134 +85,121 @@
       }
     }
 
-    /* ===== Lista de arquivos ===== */
-    .file-list {
-      margin-top: 20px;
-      opacity: 0;       /* Começa invisível */
-      pointer-events: none;
-    }
-
-    /* Quando mostramos a lista, ativamos a animação e liberamos o pointer-events */
-    .file-list.show {
-      pointer-events: auto;
-    }
-
-    .file-item {
-      margin-bottom: 8px;
-    }
-
-    /* ===== Viewer ===== */
-    .viewer {
-      margin-top: 30px;
+    /* ===== Bloco onde exibiremos a árvore ===== */
+    #treeContainer {
+      display: none;
+      opacity: 0;  /* Para animar o fade-in */
       background-color: #111;
       padding: 20px;
       border-radius: 8px;
-      display: none; /* Oculto por padrão */
-      opacity: 0;    /* Para animar o fade-in */
-    }
-    .viewer.show {
-      display: block;
-      /* Opção 1: usar fade-in direto na classe
-         Opção 2: colocar a classe fade-in pelo JS. */
-    }
-
-    pre, code {
+      margin-top: 20px;
+      white-space: pre; /* Mantém quebras de linha e espaçamentos do ASCII */
       font-family: Consolas, Monaco, monospace;
-      font-size: 14px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
+    }
+    #treeContainer.show {
+      display: block;
     }
   </style>
 </head>
 
 <body>
   <h1>.:: Papers ::.</h1>
-  <p>Listando arquivos de <code>papers/malwaredev</code> via GitHub API.</p>
-  
-  <button id="listarBtn" onclick="listarArquivos()">Listar Arquivos</button>
 
-  <div class="file-list" id="fileList"></div>
+  <button id="listarBtn" onclick="exibirEstrutura()">Listar Arquivos</button>
 
-  <div class="viewer" id="viewer">
-    <h2 id="viewerTitle"></h2>
-    <pre><code id="viewerContent"></code></pre>
-  </div>
+  <!-- Onde a estrutura em árvore será exibida -->
+  <div id="treeContainer"></div>
 
   <script>
     const githubUser  = "0xviii";
     const repoName    = "0xviii.github.io";
     const branchName  = "main";
-    const folderPath  = "papers/malwaredev";
+    const baseFolder  = "papers";  // Ajuste se quiser iniciar em outro lugar
 
-    const githubApiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${folderPath}?ref=${branchName}`;
+    /**
+     * Monta a árvore de forma recursiva, consultando a API do GitHub para cada subdiretório.
+     * Retorna uma string ASCII estilo árvore (├, └, etc).
+     *
+     * @param {string} path     Caminho atual na árvore (ex: "papers" ou "papers/malwaredev")
+     * @param {string} prefix   Prefixo usado para indentação ("", "│   ", etc)
+     * @param {boolean} isLast  Indica se este é o último item na lista
+     * @returns {Promise<string>} Retorna a string (promessa) com o desenho da árvore
+     */
+    async function buildTree(path, prefix = "", isLast = false) {
+      let tree = "";
+      
+      // Determina qual símbolo usar para este item
+      const connector = isLast ? "└── " : "├── ";
+      
+      // Extrai somente o nome da pasta (ex.: "papers/malwaredev" -> "malwaredev")
+      const folderName = path.split("/").pop();
+      
+      // Linha da pasta atual
+      // Se for a pasta base, não desenha o conector (é a raiz)
+      tree += path === baseFolder ? folderName + "\n" : prefix + connector + folderName + "/\n";
+      
+      // Novo prefix para os itens dentro desta pasta
+      const newPrefix = prefix + (isLast ? "    " : "│   ");
+      
+      // Consulta a API do GitHub para listar o conteúdo do diretório atual
+      const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
+      const response = await fetch(url);
+      const data = await response.json();
 
-    function listarArquivos() {
+      if (!Array.isArray(data)) {
+        // Se não é array, algo deu errado
+        return tree + newPrefix + "└── [Erro ao listar]\n";
+      }
+      
+      // Filtra diretórios e arquivos separadamente, para listar diretórios antes de arquivos
+      const folders = data.filter(item => item.type === "dir");
+      const files   = data.filter(item => item.type === "file");
+      
+      // Listamos cada subpasta recursivamente
+      for (let i = 0; i < folders.length; i++) {
+        const isLastFolder = (i === folders.length - 1) && files.length === 0; 
+        // Se for a última pasta e não tem arquivos depois, é "last" de verdade
+        const subfolder = folders[i];
+        tree += await buildTree(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
+      }
+      
+      // Agora listamos os arquivos
+      files.forEach((file, index) => {
+        // Determina se é o último item
+        const isLastFile = (index === files.length - 1);
+        // Se este for o último item de todos (sem pastas), marca "isLast" = true
+        const finalConnector = isLastFile ? "└── " : "├── ";
+        tree += newPrefix + finalConnector + file.name + "\n";
+      });
+      
+      return tree;
+    }
+
+    function exibirEstrutura() {
       const button = document.getElementById("listarBtn");
-      const fileListEl = document.getElementById("fileList");
+      const container = document.getElementById("treeContainer");
 
-      // Fade out do botão
+      // Efeito fade-out do botão
       button.classList.add("fade-out");
-      // Após 0.5s, removemos o botão da tela
       setTimeout(() => {
         button.style.display = "none";
       }, 500);
 
-      fetch(githubApiUrl)
-        .then(response => response.json())
-        .then(data => {
-          // Limpamos o conteúdo atual
-          fileListEl.innerHTML = "";
+      // Inicia a construção da árvore e exibe
+      buildTree(baseFolder)
+        .then(treeStr => {
+          container.textContent = "├── " + treeStr.trim(); 
+          // Ajuste: adicionamos um "├── " para ficar mais bonito na raiz (opcional)
           
-          if (Array.isArray(data)) {
-            let foundFile = false;
-            data.forEach(item => {
-              if (item.type === "file") {
-                foundFile = true;
-                const div = document.createElement("div");
-                div.className = "file-item";
-                div.innerHTML = `
-                  <a href="#" onclick="abrirArquivo('${item.name}', '${item.download_url}'); return false;">
-                    ${item.name}
-                  </a>
-                `;
-                fileListEl.appendChild(div);
-              }
-            });
-
-            if (!foundFile) {
-              fileListEl.innerHTML = "<p>Nenhum arquivo encontrado neste diretório.</p>";
-            }
-          } else {
-            fileListEl.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
-            console.error("Retorno inesperado da API:", data);
-          }
-
-          // Mostra a lista com fade-in
-          fileListEl.classList.add("show", "fade-in");
+          // Exibe o container com fade-in
+          container.classList.add("show", "fade-in");
+          container.style.opacity = "1";
         })
         .catch(err => {
-          console.error("Erro ao obter lista de arquivos:", err);
-          fileListEl.innerHTML = "<p>Ocorreu um erro ao listar.</p>";
-          // Mesmo que haja erro, animamos o aparecimento da div pra ficar visualmente consistente
-          fileListEl.classList.add("show", "fade-in");
-        });
-    }
-
-    function abrirArquivo(fileName, fileUrl) {
-      fetch(fileUrl)
-        .then(response => response.text())
-        .then(content => {
-          const viewer = document.getElementById("viewer");
-          document.getElementById("viewerTitle").textContent = "Visualizando: " + fileName;
-          document.getElementById("viewerContent").textContent = content;
-
-          // Mostra o Viewer com fade-in
-          viewer.classList.add("show", "fade-in");
-          viewer.style.opacity = "1";
-        })
-        .catch(err => {
-          console.error("Erro ao carregar arquivo:", err);
-          alert("Não foi possível carregar o arquivo.");
+          console.error("Erro ao montar a árvore:", err);
+          container.textContent = "Ocorreu um erro ao montar a estrutura.";
+          container.classList.add("show", "fade-in");
+          container.style.opacity = "1";
         });
     }
   </script>
