@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>.:: Viewer ::.</title>
   <style>
     /* ===== Reset básico ===== */
@@ -18,27 +18,12 @@
       padding: 20px;
     }
 
-    /* ===== Título centralizado com linha no meio ===== */
+    /* ===== Título centralizado com linha embaixo ===== */
     h1 {
       text-align: center;
-      color: #fff;
-      position: relative;
-      margin: 40px 0;
-    }
-    h1::before,
-    h1::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 40%;
-      height: 1px;
-      background: #fff;
-    }
-    h1::before {
-      left: 0;
-    }
-    h1::after {
-      right: 0;
+      margin: 20px 0;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #fff; /* Linha sob o título */
     }
 
     /* ===== Botão ===== */
@@ -85,121 +70,181 @@
       }
     }
 
-    /* ===== Bloco onde exibiremos a árvore ===== */
+    /* ===== Container da Árvore ===== */
     #treeContainer {
       display: none;
-      opacity: 0;  /* Para animar o fade-in */
+      opacity: 0; /* Para animar o fade-in */
       background-color: #111;
       padding: 20px;
       border-radius: 8px;
       margin-top: 20px;
-      white-space: pre; /* Mantém quebras de linha e espaçamentos do ASCII */
       font-family: Consolas, Monaco, monospace;
+      white-space: pre; /* Mantém quebra de linha e espaços */
     }
     #treeContainer.show {
       display: block;
     }
+    
+    /* Para destacar links dentro da árvore */
+    .file-link {
+      color: #0f8;
+      text-decoration: none;
+    }
+    .file-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== Viewer ===== */
+    #viewer {
+      display: none;
+      opacity: 0;
+      background-color: #111;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    #viewer.show {
+      display: block;
+    }
+    pre, code {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
   </style>
 </head>
-
 <body>
   <h1>.:: Papers ::.</h1>
 
   <button id="listarBtn" onclick="exibirEstrutura()">Listar Arquivos</button>
 
-  <!-- Onde a estrutura em árvore será exibida -->
+  <!-- Container onde será exibida a árvore -->
   <div id="treeContainer"></div>
+
+  <!-- Viewer para exibir o conteúdo de um arquivo -->
+  <div id="viewer">
+    <h2 id="viewerTitle"></h2>
+    <pre><code id="viewerContent"></code></pre>
+  </div>
 
   <script>
     const githubUser  = "0xviii";
     const repoName    = "0xviii.github.io";
     const branchName  = "main";
-    const baseFolder  = "papers";  // Ajuste se quiser iniciar em outro lugar
+
+    // A pasta principal que queremos mostrar (ex.: "papers")
+    const baseFolder  = "papers";
+
+    // Função para abrir arquivo no viewer
+    function abrirArquivo(fileName, fileUrl) {
+      fetch(fileUrl)
+        .then(response => response.text())
+        .then(content => {
+          const viewer = document.getElementById("viewer");
+          const title  = document.getElementById("viewerTitle");
+          const code   = document.getElementById("viewerContent");
+
+          title.textContent = "Visualizando: " + fileName;
+          code.textContent  = content;
+
+          // Fade-in do viewer
+          viewer.classList.add("show", "fade-in");
+          viewer.style.opacity = "1";
+        })
+        .catch(err => {
+          console.error("Erro ao carregar arquivo:", err);
+          alert("Não foi possível carregar o arquivo.");
+        });
+    }
 
     /**
-     * Monta a árvore de forma recursiva, consultando a API do GitHub para cada subdiretório.
-     * Retorna uma string ASCII estilo árvore (├, └, etc).
-     *
-     * @param {string} path     Caminho atual na árvore (ex: "papers" ou "papers/malwaredev")
-     * @param {string} prefix   Prefixo usado para indentação ("", "│   ", etc)
-     * @param {boolean} isLast  Indica se este é o último item na lista
-     * @returns {Promise<string>} Retorna a string (promessa) com o desenho da árvore
+     * Função recursiva que monta a string HTML
+     * com estrutura de árvore. Para cada diretório,
+     * chamamos a API do GitHub e listamos
+     * subdiretórios/arquivos.
      */
-    async function buildTree(path, prefix = "", isLast = false) {
-      let tree = "";
-      
+    async function buildTreeHTML(path, prefix = "", isLast = false) {
+      let html = "";
+
       // Determina qual símbolo usar para este item
       const connector = isLast ? "└── " : "├── ";
-      
-      // Extrai somente o nome da pasta (ex.: "papers/malwaredev" -> "malwaredev")
+
+      // Extrai somente o nome (ex.: "papers/malwaredev" -> "malwaredev")
       const folderName = path.split("/").pop();
-      
-      // Linha da pasta atual
-      // Se for a pasta base, não desenha o conector (é a raiz)
-      tree += path === baseFolder ? folderName + "\n" : prefix + connector + folderName + "/\n";
-      
-      // Novo prefix para os itens dentro desta pasta
+
+      // Se for a pasta raiz, não exibe conector; caso contrário, exibe
+      html += path === baseFolder 
+        ? `${folderName}/\n`
+        : `${prefix}${connector}${folderName}/\n`;
+
+      // Prefixo atualizado para os itens dentro desta pasta
       const newPrefix = prefix + (isLast ? "    " : "│   ");
-      
-      // Consulta a API do GitHub para listar o conteúdo do diretório atual
+
+      // Consulta a API
       const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
       const response = await fetch(url);
       const data = await response.json();
 
       if (!Array.isArray(data)) {
-        // Se não é array, algo deu errado
-        return tree + newPrefix + "└── [Erro ao listar]\n";
+        // Se não retornou array, exibimos erro
+        return html + newPrefix + "└── [Erro ao listar]\n";
       }
-      
-      // Filtra diretórios e arquivos separadamente, para listar diretórios antes de arquivos
-      const folders = data.filter(item => item.type === "dir");
-      const files   = data.filter(item => item.type === "file");
-      
-      // Listamos cada subpasta recursivamente
+
+      // Separar pastas e arquivos
+      const folders = data.filter(item => item.type === "dir").sort((a,b)=> a.name.localeCompare(b.name));
+      const files   = data.filter(item => item.type === "file").sort((a,b)=> a.name.localeCompare(b.name));
+
+      // Monta árvore para subdiretórios
       for (let i = 0; i < folders.length; i++) {
-        const isLastFolder = (i === folders.length - 1) && files.length === 0; 
-        // Se for a última pasta e não tem arquivos depois, é "last" de verdade
+        const isLastFolder = (i === folders.length - 1) && files.length === 0;
         const subfolder = folders[i];
-        tree += await buildTree(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
+        html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
       }
-      
-      // Agora listamos os arquivos
+
+      // Monta árvore para arquivos
       files.forEach((file, index) => {
-        // Determina se é o último item
         const isLastFile = (index === files.length - 1);
-        // Se este for o último item de todos (sem pastas), marca "isLast" = true
-        const finalConnector = isLastFile ? "└── " : "├── ";
-        tree += newPrefix + finalConnector + file.name + "\n";
+        const fileConnector = isLastFile ? "└── " : "├── ";
+
+        // Para acessar o arquivo, chamamos "abrirArquivo(...)"
+        const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
+
+        html += `${newPrefix}${fileConnector}${fileLink}\n`;
       });
-      
-      return tree;
+
+      return html;
     }
 
+    // Quando clicar no botão "Listar Arquivos"
     function exibirEstrutura() {
-      const button = document.getElementById("listarBtn");
-      const container = document.getElementById("treeContainer");
+      const button       = document.getElementById("listarBtn");
+      const treeContainer = document.getElementById("treeContainer");
 
-      // Efeito fade-out do botão
+      // Fade-out do botão
       button.classList.add("fade-out");
       setTimeout(() => {
         button.style.display = "none";
       }, 500);
 
-      // Inicia a construção da árvore e exibe
-      buildTree(baseFolder)
+      // Monta a árvore a partir de baseFolder
+      buildTreeHTML(baseFolder)
         .then(treeStr => {
-          container.textContent = "├── " + treeStr.trim(); 
-          // Ajuste: adicionamos um "├── " para ficar mais bonito na raiz (opcional)
+          // Ajuste estético: adicionamos "├── " na raiz
+          // se desejar, ou podemos deixar sem.
+          // Para ficar coerente, vamos prefixar com "├── "
+          const finalText = `├── ${treeStr.trim()}\n`;
           
-          // Exibe o container com fade-in
-          container.classList.add("show", "fade-in");
-          container.style.opacity = "1";
+          treeContainer.textContent = finalText;
+          // Fade-in do container
+          treeContainer.classList.add("show", "fade-in");
+          treeContainer.style.opacity = "1";
         })
         .catch(err => {
           console.error("Erro ao montar a árvore:", err);
-          container.textContent = "Ocorreu um erro ao montar a estrutura.";
-          container.classList.add("show", "fade-in");
-          container.style.opacity = "1";
+          treeContainer.textContent = "Ocorreu um erro ao montar a estrutura.";
+          treeContainer.classList.add("show", "fade-in");
+          treeContainer.style.opacity = "1";
         });
     }
   </script>
