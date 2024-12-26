@@ -13,37 +13,45 @@
       padding: 0;
     }
 
+    /* Ajuste para não cobrir o conteúdo */
     body {
       background-color: #000;
       color: #fff;
       font-family: Arial, sans-serif;
-      /* Centraliza verticalmente e horizontalmente */
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start; /* em vez de center, para não centralizar verticalmente */
       min-height: 100vh;
-      padding: 20px;
+
+      /* Deixe espaço para o h1 fixo no topo */
+      padding-top: 80px; 
     }
 
+    /* TÍTULO NO TOPO DA PÁGINA */
     h1 {
-      margin-bottom: 20px;
-      position: relative;    
-      display: inline-block; 
-      padding-bottom: 5px; 
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
       text-align: center;
+      background-color: #000; 
+      z-index: 999; 
+      padding: 20px 0;
+      
+      margin-bottom: 0; /* como o position é fixed, margin aqui é opcional */
+      font-size: 1.6em;
     }
 
     /* Linha embaixo do título */
     h1::after {
       content: "";
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 130%;         
-      height: 1px;         
-      background: #fff;    
-      transform: translateX(-50%); 
+      display: block;
+      margin: 0 auto;
+      margin-top: 5px;
+      width: 130px;
+      height: 1px;
+      background: #fff;
     }
 
     /* Botão grande e verde no centro da tela */
@@ -57,6 +65,7 @@
       border-radius: 8px;
       box-shadow: 0 0 10px #0f8;
       transition: background 0.3s, color 0.3s;
+      margin-top: 20px; 
     }
 
     #bigGreenBtn:hover {
@@ -186,12 +195,11 @@
         padding: 10px;
       }
     }
-
   </style>
 </head>
 <body>
 
-  <!-- TÍTULO -->
+  <!-- TÍTULO FIXO NO TOPO -->
   <h1>.:: Papers ::.</h1>
 
   <!-- BOTÃO VERDE GRANDE CENTRALIZADO -->
