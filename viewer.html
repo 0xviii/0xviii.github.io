@@ -13,33 +13,25 @@
       padding: 0;
     }
 
-    /* Ajuste para não cobrir o conteúdo */
+    /* Corpo da página */
     body {
       background-color: #000;
       color: #fff;
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start; /* em vez de center, para não centralizar verticalmente */
-      min-height: 100vh;
-
-      /* Deixe espaço para o h1 fixo no topo */
-      padding-top: 80px; 
+      margin: 0;
+      padding: 0;
     }
 
-    /* TÍTULO NO TOPO DA PÁGINA */
+    /* Cabeçalho fixo */
     h1 {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       text-align: center;
-      background-color: #000; 
-      z-index: 999; 
+      background-color: #000;
+      z-index: 999;
       padding: 20px 0;
-      
-      margin-bottom: 0; /* como o position é fixed, margin aqui é opcional */
       font-size: 1.6em;
     }
 
@@ -47,14 +39,26 @@
     h1::after {
       content: "";
       display: block;
-      margin: 0 auto;
-      margin-top: 5px;
+      margin: 5px auto 0 auto;
       width: 130px;
       height: 1px;
       background: #fff;
     }
 
-    /* Botão grande e verde no centro da tela */
+    /* Container principal para centralizar */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; 
+      min-height: 100vh;
+
+      /* Cria um espaço para não ficar atrás do cabeçalho fixo */
+      margin-top: 80px; 
+      padding: 20px;
+    }
+
+    /* Botão grande e verde */
     #bigGreenBtn {
       background: #0f8;
       color: #111;
@@ -65,15 +69,14 @@
       border-radius: 8px;
       box-shadow: 0 0 10px #0f8;
       transition: background 0.3s, color 0.3s;
-      margin-top: 20px; 
+      margin-bottom: 20px;
     }
-
     #bigGreenBtn:hover {
       background: #0c6;
       color: #fff;
     }
 
-    /* Conteúdo central (árvore e visualizador) */
+    /* Caixas de conteúdo (lista e viewer) */
     .centered-box {
       max-width: 600px;
       width: 100%;
@@ -90,7 +93,6 @@
       font-family: Consolas, Monaco, monospace;
       white-space: pre;
     }
-
     #treeContainer.show {
       display: block;
     }
@@ -108,7 +110,6 @@
     #viewer {
       font-family: Consolas, Monaco, monospace;
     }
-
     #viewer.show {
       display: block;
     }
@@ -119,13 +120,11 @@
       margin-bottom: 15px;
       padding-bottom: 10px;
     }
-
     #viewerTitle {
       font-weight: bold;
       font-size: 18px;
       margin: 0;
     }
-
     #closeViewerBtn {
       position: absolute;
       top: 0;
@@ -199,22 +198,25 @@
 </head>
 <body>
 
-  <!-- TÍTULO FIXO NO TOPO -->
+  <!-- Cabeçalho fixo no topo -->
   <h1>.:: Papers ::.</h1>
 
-  <!-- BOTÃO VERDE GRANDE CENTRALIZADO -->
-  <button id="bigGreenBtn" onclick="displayStructure()">Ver Todos os Arquivos</button>
-
-  <!-- ÁREA QUE EXIBE A ESTRUTURA DE PASTAS -->
-  <div id="treeContainer" class="centered-box"></div>
-
-  <!-- ÁREA QUE EXIBE O CONTEÚDO DE UM ARQUIVO SELECIONADO -->
-  <div id="viewer" class="centered-box">
-    <div class="viewer-header">
-      <span id="viewerTitle"></span>
-      <button id="closeViewerBtn" onclick="closeV()">×</button>
+  <!-- Container principal para centralizar o conteúdo -->
+  <div class="main-content">
+    <!-- Botão para exibir a estrutura de arquivos -->
+    <button id="bigGreenBtn" onclick="displayStructure()">Ver Todos os Arquivos</button>
+    
+    <!-- Área que exibe a estrutura de pastas -->
+    <div id="treeContainer" class="centered-box"></div>
+  
+    <!-- Área que exibe o conteúdo de um arquivo selecionado -->
+    <div id="viewer" class="centered-box">
+      <div class="viewer-header">
+        <span id="viewerTitle"></span>
+        <button id="closeViewerBtn" onclick="closeV()">×</button>
+      </div>
+      <pre><code id="viewerContent"></code></pre>
     </div>
-    <pre><code id="viewerContent"></code></pre>
   </div>
 
   <script>
@@ -224,7 +226,7 @@
     const branchName  = "main";
     const baseFolder  = "papers";
 
-    // Função para abrir e visualizar um arquivo
+    // Abre e visualiza um arquivo
     function openfile(fileName, fileUrl) {
       const ext = fileName.split('.').pop().toLowerCase();
       
@@ -232,28 +234,26 @@
       treeContainer.classList.remove("show", "fade-in");
       treeContainer.style.display = "none";
       
-      const viewer         = document.getElementById("viewer");
-      const viewerTitle    = document.getElementById("viewerTitle");
-      const viewerContent  = document.getElementById("viewerContent");
+      const viewer        = document.getElementById("viewer");
+      const viewerTitle   = document.getElementById("viewerTitle");
+      const viewerContent = document.getElementById("viewerContent");
       
       viewerContent.textContent = "";
       viewerContent.innerHTML   = ""; 
       
       viewerTitle.textContent   = fileName;
 
-      // Verifica o tipo do arquivo para exibição apropriada
       if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
+        // Imagens
         viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
         viewer.classList.add("show", "fade-in");
         viewer.style.display = "block";
         viewer.style.opacity = "1";
-      } 
-      else if (ext === 'pdf') {
-        // PDFs serão abertos em uma nova aba
+      } else if (ext === 'pdf') {
+        // PDFs em nova aba
         window.open(fileUrl, '_blank');
-      } 
-      else {
-        // Tenta carregar como arquivo texto
+      } else {
+        // Arquivo de texto
         fetch(fileUrl)
           .then(response => {
             if (!response.ok) {
@@ -269,15 +269,15 @@
           })
           .catch(err => {
             console.error("Error loading file:", err);
-            alert("Não foi possível carregar o arquivo. Verifique se é um arquivo de texto ou se ele existe no repositório.");
+            alert("Não foi possível carregar o arquivo. Verifique se ele existe no repositório.");
           });
       }
     }
 
     // Fecha o visualizador e volta para a lista
     function closeV() {
-      const viewer         = document.getElementById("viewer");
-      const treeContainer  = document.getElementById("treeContainer");
+      const viewer        = document.getElementById("viewer");
+      const treeContainer = document.getElementById("treeContainer");
 
       viewer.classList.remove("show", "fade-in");
       viewer.style.display = "none";
@@ -287,7 +287,7 @@
       treeContainer.style.opacity = "1";
     }
 
-    // Função recursiva para montar a árvore de diretórios e arquivos
+    // Monta recursivamente a árvore de diretórios e arquivos
     async function buildTreeHTML(path, prefix = "", isLast = false) {
       let html = "";
       const connector = isLast ? "└── " : "├── ";
@@ -332,11 +332,13 @@
       const button        = document.getElementById("bigGreenBtn");
       const treeContainer = document.getElementById("treeContainer");
 
+      // Animação de sumir do botão
       button.classList.add("fade-out");
       setTimeout(() => {
         button.style.display = "none";
       }, 500);
 
+      // Constrói a árvore e exibe
       buildTreeHTML(baseFolder)
         .then(treeStr => {
           treeContainer.innerHTML = treeStr;
@@ -345,7 +347,7 @@
           treeContainer.style.display = "block";
         })
         .catch(err => {
-          console.error("Error to build papers tree:", err);
+          console.error("Error building papers tree:", err);
           treeContainer.textContent = "Internal error";
           treeContainer.classList.add("show", "fade-in");
           treeContainer.style.opacity = "1";
