@@ -1,6 +1,5 @@
 <?php
-
-$dir = __DIR__ . '../papers';
+$dir = __DIR__ . '/../papers';
 
 if (!isset($_GET['file'])) {
     die("No files specified");
@@ -10,18 +9,17 @@ $file = trim($_GET['file']);
 $file = str_replace('../', '', $file);
 $file = str_replace('..\\', '', $file);
 
-$fullpath = realpath($dir . '/' . $file);
+$fullPath = realpath($dir . '/' . $file);
 
-if ($fullpath === false || strpos($fullpath, realpath($dir)) !== 0) {
+if ($fullPath === false || strpos($fullPath, realpath($dir)) !== 0) {
     die("Invalid file");
 }
 
-if (!file_exists($fullpath)) {
+if (!file_exists($fullPath)) {
     die("File not found");
 }
 
-$content = file_get_contents($fullpath);
-
+$content = file_get_contents($fullPath);
 ?>
 <!DOCTYPE html>
 <html>
@@ -52,7 +50,6 @@ $content = file_get_contents($fullpath);
             }
         </style>
     </head>
-
     <body>
         <a class="back" href="list.php">&larr; Back to list</a>
         <h1>Viewing file: <?= htmlspecialchars($file) ?></h1>
