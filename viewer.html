@@ -170,7 +170,7 @@
     <body>
         <div class="header-container">
             <h1>.:: Papers ::.</h1><br />
-            <button id="listarBtn" onclick="exibirEstrutura()">All files</button>
+            <button id="listarBtn" onclick="displayStructure()">All files</button>
         </div>
 
         <div id="treeContainer" class="centered-box"></div>
@@ -178,7 +178,7 @@
         <div id="viewer" class="centered-box">
             <div class="viewer-header">
             <span id="viewerTitle"></span>
-            <button id="closeViewerBtn" onclick="fecharViewer()">×</button>
+            <button id="closeViewerBtn" onclick="closeV()">×</button>
             </div>
             <pre><code id="viewerContent"></code></pre>
         </div>
@@ -189,7 +189,7 @@
             const branchName  = "main";
             const baseFolder  = "papers";
 
-            function abrirArquivo(fileName, fileUrl) {
+            function openfile(fileName, fileUrl) {
             const ext = fileName.split('.').pop().toLowerCase();
             
             const treeContainer = document.getElementById("treeContainer");
@@ -203,7 +203,7 @@
             viewerContent.textContent = "";
             viewerContent.innerHTML   = ""; 
             
-            viewerTitle.textContent   = "Visualizando: " + fileName;
+            viewerTitle.textContent   = fileName;
 
             if (['png','jpg','jpeg','gif','svg'].includes(ext)) {
                 viewerContent.innerHTML = `<img src="${fileUrl}" alt="${fileName}" />`;
@@ -218,7 +218,7 @@
                 fetch(fileUrl)
                 .then(response => {
                     if (!response.ok) {
-                    throw new Error("Não foi possível carregar o arquivo: " + response.status);
+                    throw new Error("Could not load file: " + response.status);
                     }
                     return response.text();
                 })
@@ -229,86 +229,86 @@
                     viewer.style.opacity = "1";
                 })
                 .catch(err => {
-                    console.error("Erro ao carregar arquivo:", err);
-                    alert("Não foi possível carregar o arquivo. Verifique se é um arquivo texto ou se ele existe no repositório.");
+                    console.error("Error loading file:", err);
+                    alert("Could not load file. Check if it is a text file or if it exists in the repository.");
                 });
             }
             }
 
-            function fecharViewer() {
-            const viewer         = document.getElementById("viewer");
-            const treeContainer  = document.getElementById("treeContainer");
+            function closeV() {
+                const viewer         = document.getElementById("viewer");
+                const treeContainer  = document.getElementById("treeContainer");
 
-            viewer.classList.remove("show", "fade-in");
-            viewer.style.display = "none";
-            
-            treeContainer.classList.add("show", "fade-in");
-            treeContainer.style.display = "block";
-            treeContainer.style.opacity = "1";
+                viewer.classList.remove("show", "fade-in");
+                viewer.style.display = "none";
+                
+                treeContainer.classList.add("show", "fade-in");
+                treeContainer.style.display = "block";
+                treeContainer.style.opacity = "1";
             }
 
             async function buildTreeHTML(path, prefix = "", isLast = false) {
-            let html = "";
-            const connector = isLast ? "└── " : "├── ";
-            const folderName = path.split("/").pop();
+                let html = "";
+                const connector = isLast ? "└── " : "├── ";
+                const folderName = path.split("/").pop();
 
-            if (path === baseFolder) {
-                html += folderName + "/\n";
-            } else {
-                html += prefix + connector + folderName + "/\n";
-            }
+                if (path === baseFolder) {
+                    html += folderName + "/\n";
+                } else {
+                    html += prefix + connector + folderName + "/\n";
+                }
 
-            const newPrefix = prefix + (isLast ? "    " : "│   ");
-            const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
-            const response = await fetch(url);
-            const data = await response.json();
+                const newPrefix = prefix + (isLast ? "    " : "│   ");
+                const url = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${path}?ref=${branchName}`;
+                const response = await fetch(url);
+                const data = await response.json();
 
-            if (!Array.isArray(data)) {
-                return html + newPrefix + "└── [Erro ao listar]\n";
-            }
+                if (!Array.isArray(data)) {
+                    return html + newPrefix + "└── [Internal error]\n";
+                }
 
-            const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
-            const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
+                const folders = data.filter(item => item.type === "dir").sort((a,b) => a.name.localeCompare(b.name));
+                const files   = data.filter(item => item.type === "file").sort((a,b) => a.name.localeCompare(b.name));
 
-            for (let i = 0; i < folders.length; i++) {
-                const subfolder = folders[i];
-                const isLastFolder = (i === folders.length - 1) && (files.length === 0);
-                html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
-            }
+                for (let i = 0; i < folders.length; i++) {
+                    const subfolder = folders[i];
+                    const isLastFolder = (i === folders.length - 1) && (files.length === 0);
+                    html += await buildTreeHTML(`${path}/${subfolder.name}`, newPrefix, isLastFolder);
+                }
 
-            files.forEach((file, index) => {
-                const isLastFile = (index === files.length - 1);
-                const fileConnector = isLastFile ? "└── " : "├── ";
-                const fileLink = `<a href="#" class="file-link" onclick="abrirArquivo('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
-                html += `${newPrefix}${fileConnector}${fileLink}\n`;
-            });
-
-            return html;
-            }
-
-            function exibirEstrutura() {
-            const button        = document.getElementById("listarBtn");
-            const treeContainer = document.getElementById("treeContainer");
-
-            button.classList.add("fade-out");
-            setTimeout(() => {
-                button.style.display = "none";
-            }, 500);
-
-            buildTreeHTML(baseFolder)
-                .then(treeStr => {
-                treeContainer.innerHTML = treeStr;
-                treeContainer.classList.add("show", "fade-in");
-                treeContainer.style.opacity = "1";
-                treeContainer.style.display = "block";
-                })
-                .catch(err => {
-                console.error("Erro ao montar a árvore:", err);
-                treeContainer.textContent = "Ocorreu um erro ao montar a estrutura.";
-                treeContainer.classList.add("show", "fade-in");
-                treeContainer.style.opacity = "1";
-                treeContainer.style.display = "block";
+                files.forEach((file, index) => {
+                    const isLastFile = (index === files.length - 1);
+                    const fileConnector = isLastFile ? "└── " : "├── ";
+                    const fileLink = `<a href="#" class="file-link" onclick="openfile('${file.name}', '${file.download_url}'); return false;">${file.name}</a>`;
+                    html += `${newPrefix}${fileConnector}${fileLink}\n`;
                 });
+
+                return html;
+            }
+
+            function displayStructure() {
+                const button        = document.getElementById("listarBtn");
+                const treeContainer = document.getElementById("treeContainer");
+
+                button.classList.add("fade-out");
+                setTimeout(() => {
+                    button.style.display = "none";
+                }, 500);
+
+                buildTreeHTML(baseFolder)
+                    .then(treeStr => {
+                        treeContainer.innerHTML = treeStr;
+                        treeContainer.classList.add("show", "fade-in");
+                        treeContainer.style.opacity = "1";
+                        treeContainer.style.display = "block";
+                    })
+                    .catch(err => {
+                        console.error("Error to build papers tree:", err);
+                        treeContainer.textContent = "Internal error";
+                        treeContainer.classList.add("show", "fade-in");
+                        treeContainer.style.opacity = "1";
+                        treeContainer.style.display = "block";
+                    });
             }
         </script>
     </body>
