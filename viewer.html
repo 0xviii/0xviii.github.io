@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Visualizador de Papers</title>
+  <title>.:: Viewer ::.</title>
   <style>
     body {
       background-color: #000;
@@ -10,8 +10,12 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-    h1 {
-      margin-bottom: 10px;
+    a {
+      color: #0f8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
     button {
       background: #111;
@@ -31,13 +35,6 @@
     .file-item {
       margin-bottom: 8px;
     }
-    a {
-      color: #0f8;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
     .viewer {
       margin-top: 30px;
       background-color: #111;
@@ -55,42 +52,41 @@
 
 <body>
   <h1>.:: Papers ::.</h1>
-  <p>Este exemplo faz listagem e visualização via GitHub API da pasta <code>papers</code>.</p>
+  <p>Exemplo de listagem e visualização (via GitHub API) da pasta <code>papers</code>.</p>
+
   <button onclick="listarArquivos()">Listar Arquivos</button>
 
-  <!-- Área onde a lista de arquivos será exibida -->
-  <div id="fileList" class="file-list"></div>
+  <div class="file-list" id="fileList"></div>
 
-  <!-- Área onde exibimos o conteúdo de um arquivo -->
-  <div id="viewer" class="viewer" style="display:none;">
+  <div class="viewer" id="viewer" style="display: none;">
     <h2 id="viewerTitle"></h2>
     <pre><code id="viewerContent"></code></pre>
   </div>
 
   <script>
-    // AJUSTE ESTES VALORES PARA SEU REPO/PATH
-    const githubUser   = "0xviii";
-    const repoName     = "0xviii.github.io";
-    const branchName   = "main";
-    // A pasta "papers" está no root do repositório
-    const folderPath   = "papers";
+    // AJUSTE ESTES VALORES PARA O SEU REPOSITÓRIO
+    const githubUser   = "0xviii";             // Seu usuário ou organização
+    const repoName     = "0xviii.github.io";   // Nome do seu repositório
+    const branchName   = "main";               // Branch principal (p. ex., "main" ou "master")
+    const folderPath   = "papers";             // Pasta que deseja listar no root (papers/)
 
-    // Monta URL da API GitHub para listar conteúdos da pasta
-    // Ex: https://api.github.com/repos/0xviii/0xviii.github.io/contents/papers?ref=main
+    // URL da API para listar a pasta "papers"
+    // ex: https://api.github.com/repos/0xviii/0xviii.github.io/contents/papers?ref=main
     const githubApiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${folderPath}?ref=${branchName}`;
 
-    // Carrega a lista de arquivos da pasta "papers" usando a API
+    // Lista arquivos na pasta 'papers'
     function listarArquivos() {
       fetch(githubApiUrl)
         .then(response => response.json())
         .then(data => {
           const fileListDiv = document.getElementById("fileList");
-          fileListDiv.innerHTML = ""; // Limpa antes de exibir
+          fileListDiv.innerHTML = "";
 
           if (Array.isArray(data)) {
+            // Percorre todos os itens retornados
             data.forEach(item => {
+              // Exibir somente arquivos (type === 'file')
               if (item.type === "file") {
-                // Gera um link clicável para visualizar o conteúdo do arquivo
                 const div = document.createElement("div");
                 div.className = "file-item";
                 div.innerHTML = `
@@ -103,16 +99,16 @@
             });
           } else {
             fileListDiv.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
-            console.error("Retorno inesperado da API:", data);
+            console.error("Resposta inesperada da API:", data);
           }
         })
-        .catch(err => {
-          console.error("Erro ao obter a lista de arquivos:", err);
-          document.getElementById("fileList").innerHTML = "<p>Ocorreu um erro ao listar os arquivos.</p>";
+        .catch(error => {
+          console.error("Erro ao obter a lista de arquivos:", error);
+          document.getElementById("fileList").innerHTML = "<p>Erro ao listar arquivos.</p>";
         });
     }
 
-    // Ao clicar num arquivo, buscaremos o conteúdo (plaintext) e exibiremos
+    // Abre o conteúdo de um arquivo (plaintext) e exibe no viewer
     function abrirArquivo(fileName, fileUrl) {
       fetch(fileUrl)
         .then(response => response.text())
@@ -121,8 +117,8 @@
           document.getElementById("viewerContent").textContent = content;
           document.getElementById("viewer").style.display      = "block";
         })
-        .catch(err => {
-          console.error("Erro ao carregar arquivo:", err);
+        .catch(error => {
+          console.error("Erro ao carregar o arquivo:", error);
           alert("Não foi possível carregar o arquivo.");
         });
     }
