@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visualizador de Papers</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    button {
+      background: #111;
+      color: #0f8;
+      border: 1px solid #0f8;
+      padding: 8px 12px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    button:hover {
+      background: #0f8;
+      color: #111;
+    }
+    .file-list {
+      margin-top: 20px;
+    }
+    .file-item {
+      margin-bottom: 8px;
+    }
+    a {
+      color: #0f8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .viewer {
+      margin-top: 30px;
+      background-color: #111;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    pre, code {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>.:: Papers ::.</h1>
+  <p>Este exemplo faz listagem e visualização via GitHub API da pasta <code>papers</code>.</p>
+  <button onclick="listarArquivos()">Listar Arquivos</button>
+
+  <!-- Área onde a lista de arquivos será exibida -->
+  <div id="fileList" class="file-list"></div>
+
+  <!-- Área onde exibimos o conteúdo de um arquivo -->
+  <div id="viewer" class="viewer" style="display:none;">
+    <h2 id="viewerTitle"></h2>
+    <pre><code id="viewerContent"></code></pre>
+  </div>
+
+  <script>
+    // AJUSTE ESTES VALORES PARA SEU REPO/PATH
+    const githubUser   = "0xviii";
+    const repoName     = "0xviii.github.io";
+    const branchName   = "main";
+    // A pasta "papers" está no root do repositório
+    const folderPath   = "papers";
+
+    // Monta URL da API GitHub para listar conteúdos da pasta
+    // Ex: https://api.github.com/repos/0xviii/0xviii.github.io/contents/papers?ref=main
+    const githubApiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${folderPath}?ref=${branchName}`;
+
+    // Carrega a lista de arquivos da pasta "papers" usando a API
+    function listarArquivos() {
+      fetch(githubApiUrl)
+        .then(response => response.json())
+        .then(data => {
+          const fileListDiv = document.getElementById("fileList");
+          fileListDiv.innerHTML = ""; // Limpa antes de exibir
+
+          if (Array.isArray(data)) {
+            data.forEach(item => {
+              if (item.type === "file") {
+                // Gera um link clicável para visualizar o conteúdo do arquivo
+                const div = document.createElement("div");
+                div.className = "file-item";
+                div.innerHTML = `
+                  <a href="#" onclick="abrirArquivo('${item.name}', '${item.download_url}'); return false;">
+                    ${item.name}
+                  </a>
+                `;
+                fileListDiv.appendChild(div);
+              }
+            });
+          } else {
+            fileListDiv.innerHTML = "<p>Não foi possível listar os arquivos.</p>";
+            console.error("Retorno inesperado da API:", data);
+          }
+        })
+        .catch(err => {
+          console.error("Erro ao obter a lista de arquivos:", err);
+          document.getElementById("fileList").innerHTML = "<p>Ocorreu um erro ao listar os arquivos.</p>";
+        });
+    }
+
+    // Ao clicar num arquivo, buscaremos o conteúdo (plaintext) e exibiremos
+    function abrirArquivo(fileName, fileUrl) {
+      fetch(fileUrl)
+        .then(response => response.text())
+        .then(content => {
+          document.getElementById("viewerTitle").textContent   = "Visualizando: " + fileName;
+          document.getElementById("viewerContent").textContent = content;
+          document.getElementById("viewer").style.display      = "block";
+        })
+        .catch(err => {
+          console.error("Erro ao carregar arquivo:", err);
+          alert("Não foi possível carregar o arquivo.");
+        });
+    }
+  </script>
+</body>
+</html>
